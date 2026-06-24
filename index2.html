@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Control de Almuerzos — CDI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<!-- Librería para procesar Excel/CSV -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Scripts oficiales de Google Identity y API Client -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<style>
+  :root{
+    --bg:#10131A; --surface:#181C24; --surface2:#1F242E; --border:#2A2F3A;
+    --text:#F2F4F7; --text-soft:#9AA3B2; --text-mute:#6B7384; --accent:#E2643D;
+    --accent-bg:rgba(226,100,61,.16); --a:#5B8DEF; --a-bg:rgba(91,141,239,.16);
+    --b:#2BC4A0; --b-bg:rgba(43,196,160,.16); --c:#A07CF0; --c-bg:rgba(160,124,240,.16);
+    --danger:#EA5D5F; --danger-bg:rgba(234,93,95,.14); --ok:#3FCB8E; --ok-bg:rgba(63,203,142,.14);
+  }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh;}
+  * {box-sizing:border-box;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
+  header.app{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand h1{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:21px;margin:0;}
+  .steps{display:flex;gap:8px;}
+  .step-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);font-size:13px;color:var(--text-mute);}
+  .step-pill.active{border-color:var(--accent);color:var(--text);font-weight:600;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;margin-bottom:18px;}
+  .card h2{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:600;margin:0 0 6px;}
+  .card .sub{color:var(--text-mute);font-size:14px;margin:0 0 20px;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  button{font-family:'Inter',sans-serif;font-weight:500;font-size:14px;cursor:pointer;border-radius:9px;border:1px solid var(--border);background:var(--surface2);padding:10px 18px;color:var(--text);transition:background .15s;}
+  button:hover{background:#262C38;}
+  button.primary{background:var(--accent);color:#1A0E08;border-color:var(--accent);font-weight:600;}
+  button.primary:disabled{background:var(--surface2);color:var(--text-mute);border-color:var(--border);cursor:not-allowed;}
+  button.google-btn{background:#fff;color:#1f1f1f;border:1px solid #747775;font-weight:500;display:inline-flex;align-items:center;gap:8px;}
+  button.google-btn:hover{background:#f3f3f3;}
+  .dropzone{border:1.5px dashed var(--border);border-radius:12px;padding:24px;text-align:center;color:var(--text-mute);font-size:14px;cursor:pointer;background:var(--surface2);display:flex;flex-direction:column;justify-content:center;}
+  .google-sync-box {background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display:flex; flex-direction:column; justify-content:space-between;}
+  .split-options {display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--text-mute);padding:9px 10px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);}
+  .tablewrap{max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:10px;margin-top:14px;}
+  .alert{padding:11px 16px;border-radius:10px;font-size:13px;margin-top:14px;}
+  .alert.warn{background:var(--danger-bg);color:var(--danger);}
+  .alert.ok{background:var(--ok-bg);color:var(--ok);}
+  .hide{display:none !important;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .kpi{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+  .kpi .val{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app">
+    <div class="brand"><h1>Control de Almuerzos</h1></div>
+    <div class="steps">
+      <div class="step-pill" id="pill-1">1. Personal</div>
+      <div class="step-pill" id="pill-2">2. Pedidos</div>
+      <div class="step-pill" id="pill-3">3. Dashboard</div>
+    </div>
+    <div>
+      <button id="btn-auth" class="google-btn">🌐 Conectar Google Account</button>
+      <span id="user-logged" class="mono" style="font-size:12px; color:var(--ok); margin-left:8px; display:none;">● Autenticado</span>
+    </div>
+  </header>
+
+  <!-- STEP 1 -->
+  <section id="step1" class="card">
+    <h2>1. Lista de Personal</h2>
+    <p class="sub">Vincúlate directamente a tu archivo de Drive sin configuraciones manuales repetitivas.</p>
+    
+    <div class="split-options">
+      <div class="google-sync-box">
+        <div>
+          <h3 style="margin:0 0 4px; font-size:15px;">⚡ Acceso Automatizado</h3>
+          <p style="font-size:12px; color:var(--text-soft); margin:0 0 14px;" id="lbl-file-1">Ningún archivo seleccionado</p>
+        </div>
+        <button class="primary" id="btn-pick-staff" style="background:var(--a); border-color:var(--a);" disabled>🔍 Elegir de Drive</button>
+      </div>
+      <div class="dropzone" id="drop-1">
+        <strong>O arrastra el Excel local aquí</strong>
+        <input type="file" id="file-1" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+    </div>
+    <div id="alert-1"></div>
+    <div id="preview-1"></div>
+    <div class="row" style="margin-top:18px;justify-content:flex-end;"><button class="primary" id="next-1" disabled>Continuar →</button></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section id="step2" class="card hide">
+    <h2>2. Archivo de Respuestas / Pedidos</h2>
+    <p class="sub">Selecciona el origen de datos para los menús del día.</p>
+    
+    <div class="split-options">
+      <div class="google-sync-box">
+        <div>
+          <h3 style="margin:0 0 4px; font-size:15px;">⚡ Acceso Automatizado</h3>
+          <p style="font-size:12px; color:var(--text-soft); margin:0 0 14px;" id="lbl-file-2">Ningún archivo seleccionado</p>
+        </div>
+        <button class="primary" id="btn-pick-orders" style="background:var(--ok); border-color:var(--ok); color:#06241A;" disabled>🔍 Elegir de Drive</button>
+      </div>
+      <div class="dropzone" id="drop-2">
+        <strong>O arrastra el Excel de Pedidos aquí</strong>
+        <input type="file" id="file-2" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+    </div>
+    <div id="alert-2"></div>
+    <div id="preview-2"></div>
+    <div class="row" style="margin-top:18px;justify-content:space-between;">
+      <button id="back-2">← Volver</button>
+      <button class="primary" id="next-2" disabled>Procesar Dashboard →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section id="step3" class="card hide">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h2>Dashboard Automatizado</h2>
+      <div class="row">
+        <button id="btn-reload-drive" style="background:var(--ok-bg); color:var(--ok); border-color:var(--ok);" class="hide">🔄 Sincronizar Drive Ahora</button>
+        <button id="btn-clear" style="color:var(--danger); border-color:var(--danger);">Limpiar todo</button>
+      </div>
+    </div>
+    
+    <div class="kpis">
+      <div class="kpi"><div>Personal Base</div><div class="val" id="kpi-total">0</div></div>
+      <div class="kpi"><div>Pedidos Registrados</div><div class="val" id="kpi-ord" style="color:var(--ok);">0</div></div>
+      <div class="kpi"><div>Faltantes</div><div class="val" id="kpi-miss" style="color:var(--danger);">0</div></div>
+    </div>
+    <button id="back-3">← Cambiar Orígenes</button>
+  </section>
+
+</div>
+
+<script>
+// ==========================================
+// CONFIGURACIÓN OBLIGATORIA DE GOOGLE DEVELOPERS
+// ==========================================
+const CLIENT_ID = 'TU_CLIENT_ID_AQUÍ.apps.googleusercontent.com';
+const API_KEY = 'TU_API_KEY_AQUÍ';
+const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+
+let tokenClient;
+let accessToken = localStorage.getItem('drive_access_token') || null;
+let staffFileId = localStorage.getItem('drive_staff_file_id') || null;
+let ordersFileId = localStorage.getItem('drive_orders_file_id') || null;
+
+let staff = [];
+let orders = [];
+
+// Inicialización de APIs de Google
+window.onload = function() {
+  gapi.load('client:picker', () => gapi.client.init({apiKey: API_KEY, discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]}));
+  
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.error) return;
+      accessToken = resp.access_token;
+      localStorage.setItem('drive_access_token', accessToken);
+      document.getElementById('user-logged').style.display = 'inline';
+      document.getElementById('btn-pick-staff').disabled = false;
+      document.getElementById('btn-pick-orders').disabled = false;
+      
+      // Si ya teníamos archivos guardados en sesiones anteriores, los procesa al vuelo
+      if(staffFileId || ordersFileId) autoFetchSavedFiles();
+    }
+  });
+
+  if(accessToken) {
+    gapi.client.setToken({access_token: accessToken});
+    document.getElementById('user-logged').style.display = 'inline';
+    document.getElementById('btn-pick-staff').disabled = false;
+    document.getElementById('btn-pick-orders').disabled = false;
+    autoFetchSavedFiles();
+  }
+};
+
+document.getElementById('btn-auth').onclick = () => tokenClient.requestAccessToken({prompt: 'consent'});
+
+// Control del Google Picker (Explorador de Archivos Nativo)
+function createPicker(targetType) {
+  const view = new google.picker.View(google.picker.ViewId.DOCS);
+  view.setMimeTypes("application/vnd.google-apps.spreadsheet,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv");
+  
+  const picker = new google.picker.PickerBuilder()
+    .addView(view)
+    .setOAuthToken(accessToken)
+    .setDeveloperKey(API_KEY)
+    .setCallback((data) => {
+      if (data.action == google.picker.Action.PICKED) {
+        const doc = data.docs[0];
+        if(targetType === 'staff') {
+          staffFileId = doc.id;
+          localStorage.setItem('drive_staff_file_id', doc.id);
+          document.getElementById('lbl-file-1').textContent = `✓ Conectado: ${doc.name}`;
+          fetchFileFromDrive(doc.id, 'staff');
+        } else {
+          ordersFileId = doc.id;
+          localStorage.setItem('drive_orders_file_id', doc.id);
+          document.getElementById('lbl-file-2').textContent = `✓ Conectado: ${doc.name}`;
+          fetchFileFromDrive(doc.id, 'orders');
+        }
+      }
+    })
+    .build();
+  picker.setVisible(true);
+}
+
+document.getElementById('btn-pick-staff').onclick = () => createPicker('staff');
+document.getElementById('btn-pick-orders').onclick = () => createPicker('orders');
+
+// Descarga y conversión del archivo desde Drive en Segundo Plano
+async function fetchFileFromDrive(fileId, target) {
+  try {
+    // Intenta descargarlo directamente como formato binario Excel o lo convierte a CSV si es nativo de Google Sheets
+    let response;
+    try {
+      response = await gapi.client.drive.files.export({ fileId: fileId, mimeType: 'text/csv' });
+    } catch(e) {
+      response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
+    }
+    
+    const wb = XLSX.read(response.body, {type: 'string'});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''});
+    
+    if(target === 'staff') processStaff(rows);
+    else processOrders(rows);
+    
+    if(staffFileId && ordersFileId) document.getElementById('btn-reload-drive').classList.remove('hide');
+  } catch (err) {
+    console.error("Error leyendo archivo de Drive", err);
+    // Si el token expiró silenciosamente, refrescarlo
+    if(err.status === 401) tokenClient.requestAccessToken({prompt: ''});
+  }
+}
+
+async function autoFetchSavedFiles() {
+  if(staffFileId) {
+    document.getElementById('lbl-file-1').textContent = "✓ Cargando enlace automático...";
+    await fetchFileFromDrive(staffFileId, 'staff');
+  }
+  if(ordersFileId) {
+    document.getElementById('lbl-file-2').textContent = "✓ Cargando enlace automático...";
+    await fetchFileFromDrive(ordersFileId, 'orders');
+  }
+}
+
+document.getElementById('btn-reload-drive').onclick = async () => {
+  document.getElementById('btn-reload-drive').textContent = "⏳ Sincronizando...";
+  if(staffFileId) await fetchFileFromDrive(staffFileId, 'staff');
+  if(ordersFileId) await fetchFileFromDrive(ordersFileId, 'orders');
+  computeDashboard();
+  document.getElementById('btn-reload-drive').textContent = "🔄 Sincronizar Drive Ahora";
+};
+
+// ==========================================
+// PROCESAMIENTO LOGICO DE TABLAS
+// ==========================================
+function findCol(headers, candidates){
+  const norm = h => String(h).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  for(const c of candidates){ const idx = headers.findIndex(h => norm(h).includes(c)); if(idx>=0) return idx; }
+  return -1;
+}
+
+function processStaff(rows) {
+  if(!rows.length) return;
+  const h = rows[0];
+  const iNom = findCol(h, ['nombre','completo']);
+  const iDni = findCol(h, ['dni','documento']);
+  if(iNom < 0 || iDni < 0) { alert("Archivo de personal inválido. Debe contener columnas Nombre y DNI."); return; }
+  
+  staff = rows.slice(1).filter(r => r[iNom]).map(r => ({ nombre: String(r[iNom]).trim(), dni: String(r[iDni]).trim() }));
+  document.getElementById('alert-1').innerHTML = `<div class="alert ok">Cargados ${staff.length} colaboradores desde Drive de forma directa.</div>`;
+  document.getElementById('next-1').disabled = false;
+}
+
+function processOrders(rows) {
+  if(!rows.length) return;
+  const h = rows[0];
+  const iDni = findCol(h, ['dni','documento']);
+  if(iDni < 0) { alert("Archivo de pedidos inválido. Debe contener columna DNI."); return; }
+  
+  orders = rows.slice(1).filter(r => r[iDni]).map(r => ({ dni: String(r[iDni]).trim() }));
+  document.getElementById('alert-2').innerHTML = `<div class="alert ok">Cargados ${orders.length} pedidos detectados en el formulario.</div>`;
+  document.getElementById('next-2').disabled = false;
+}
+
+// Navegación Básica e Interfaz
+function go(step) { [1,2,3].forEach(i => { document.getElementById('step'+i).classList.toggle('hide', i!==step); document.getElementById('pill-'+i).classList.toggle('active', i===step); }); }
+document.getElementById('next-1').onclick = () => go(2);
+document.getElementById('back-2').onclick = () => go(1);
+document.getElementById('back-3').onclick = () => go(2);
+document.getElementById('next-2').onclick = () => { go(3); computeDashboard(); };
+
+function computeDashboard() {
+  document.getElementById('kpi-total').textContent = staff.length;
+  const setOrders = new Set(orders.map(o => o.dni));
+  let validados = 0;
+  staff.forEach(s => { if(setOrders.has(s.dni)) validados++; });
+  
+  document.getElementById('kpi-ord').textContent = validados;
+  document.getElementById('kpi-miss').textContent = staff.length - validados;
+}
+
+document.getElementById('btn-clear').onclick = () => {
+  localStorage.clear();
+  location.reload();
+};
+
+// Soporte para Drag & Drop clásico (Sigue activo como Opción B)
+function hookDrop(id, callback) {
+  const el = document.getElementById(id);
+  el.onclick = () => el.querySelector('input').click();
+  el.querySelector('input').onchange = e => { if(e.target.files[0]) readLocal(e.target.files[0], callback); };
+  el.onsubmit = e => e.preventDefault();
+  el.addEventListener('dragover', e => { e.preventDefault(); });
+  el.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files[0]) readLocal(e.dataTransfer.files[0], callback); });
+}
+function readLocal(file, callback) {
+  const r = new FileReader();
+  r.onload = e => { const wb = XLSX.read(e.target.result, {type:'array'}); callback(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''})); };
+  r.readAsArrayBuffer(file);
+}
+hookDrop('drop-1', processStaff);
+hookDrop('drop-2', processOrders);
+</script>
+</body>
+</html>
