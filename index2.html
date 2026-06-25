@@ -6,333 +6,669 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<!-- Librería para procesar Excel/CSV -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- Scripts oficiales de Google Identity y API Client -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
   :root{
-    --bg:#10131A; --surface:#181C24; --surface2:#1F242E; --border:#2A2F3A;
-    --text:#F2F4F7; --text-soft:#9AA3B2; --text-mute:#6B7384; --accent:#E2643D;
-    --accent-bg:rgba(226,100,61,.16); --a:#5B8DEF; --a-bg:rgba(91,141,239,.16);
-    --b:#2BC4A0; --b-bg:rgba(43,196,160,.16); --c:#A07CF0; --c-bg:rgba(160,124,240,.16);
-    --danger:#EA5D5F; --danger-bg:rgba(234,93,95,.14); --ok:#3FCB8E; --ok-bg:rgba(63,203,142,.14);
+    --bg:#10131A;
+    --surface:#181C24;
+    --surface2:#1F242E;
+    --border:#2A2F3A;
+    --text:#F2F4F7;
+    --text-soft:#9AA3B2;
+    --text-mute:#6B7384;
+    --accent:#E2643D;
+    --accent-bg:rgba(226,100,61,.16);
+    --a:#5B8DEF;
+    --a-bg:rgba(91,141,239,.16);
+    --b:#2BC4A0;
+    --b-bg:rgba(43,196,160,.16);
+    --c:#A07CF0;
+    --c-bg:rgba(160,124,240,.16);
+    --danger:#EA5D5F;
+    --danger-bg:rgba(234,93,95,.14);
+    --ok:#3FCB8E;
+    --ok-bg:rgba(63,203,142,.14);
   }
-  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh;}
-  * {box-sizing:border-box;}
+  html[data-theme="light"]{
+    --bg:#F3F4F7;
+    --surface:#FFFFFF;
+    --surface2:#F0F1F5;
+    --border:#DDE1E7;
+    --text:#1B2330;
+    --text-soft:#5B6472;
+    --text-mute:#8A92A0;
+    --accent:#D2531F;
+    --accent-bg:rgba(210,83,31,.10);
+    --a:#3463CC;
+    --a-bg:rgba(52,99,204,.10);
+    --b:#0E8F73;
+    --b-bg:rgba(14,143,115,.10);
+    --c:#7A56D6;
+    --c-bg:rgba(122,86,214,.10);
+    --danger:#C53A3C;
+    --danger-bg:rgba(197,58,60,.10);
+    --ok:#1C9A66;
+    --ok-bg:rgba(28,154,102,.10);
+  }
+  body{transition:background .2s, color .2s; margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh;}
+  *{box-sizing:border-box;}
   .mono{font-family:'IBM Plex Mono',monospace;}
   .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
-  header.app{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+
+  header.app{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px;}
   .brand{display:flex;align-items:center;gap:12px;}
+  .brand .tag{width:42px;height:42px;border-radius:10px;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;}
   .brand h1{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:21px;margin:0;}
+  .brand p{margin:0;font-size:12px;color:var(--text-mute);}
+  .clock{text-align:right;}
+  .clock .time{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;line-height:1;}
+  .clock .date{font-size:12px;color:var(--text-mute);text-transform:capitalize;}
+
   .steps{display:flex;gap:8px;}
   .step-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);font-size:13px;color:var(--text-mute);}
+  .step-pill .n{width:20px;height:20px;border-radius:50%;background:var(--surface2);color:var(--text-mute);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
   .step-pill.active{border-color:var(--accent);color:var(--text);font-weight:600;}
+  .step-pill.active .n{background:var(--accent);color:#1A0E08;}
+  .step-pill.done .n{background:var(--ok);color:#06241A;}
+  .step-pill.done{color:var(--ok);}
+
   .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;margin-bottom:18px;}
   .card h2{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:600;margin:0 0 6px;}
-  .card .sub{color:var(--text-mute);font-size:14px;margin:0 0 20px;}
+  .card .sub{color:var(--text-mute);font-size:14px;margin:0 0 20px;line-height:1.5;}
+
   .row{display:flex;gap:12px;flex-wrap:wrap;}
-  button{font-family:'Inter',sans-serif;font-weight:500;font-size:14px;cursor:pointer;border-radius:9px;border:1px solid var(--border);background:var(--surface2);padding:10px 18px;color:var(--text);transition:background .15s;}
+  button{font-family:'Inter',sans-serif;font-weight:500;font-size:14px;cursor:pointer;border-radius:9px;border:1px solid var(--border);background:var(--surface2);padding:10px 18px;color:var(--text);transition:transform .08s, background .15s;}
   button:hover{background:#262C38;}
+  button:active{transform:scale(.98);}
   button.primary{background:var(--accent);color:#1A0E08;border-color:var(--accent);font-weight:600;}
-  button.primary:disabled{background:var(--surface2);color:var(--text-mute);border-color:var(--border);cursor:not-allowed;}
-  button.google-btn{background:#fff;color:#1f1f1f;border:1px solid #747775;font-weight:500;display:inline-flex;align-items:center;gap:8px;}
-  button.google-btn:hover{background:#f3f3f3;}
-  .dropzone{border:1.5px dashed var(--border);border-radius:12px;padding:24px;text-align:center;color:var(--text-mute);font-size:14px;cursor:pointer;background:var(--surface2);display:flex;flex-direction:column;justify-content:center;}
-  .google-sync-box {background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display:flex; flex-direction:column; justify-content:space-between;}
-  .split-options {display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;}
+  button.primary:hover{background:#EE7550;}
+  button.ghost{border-color:transparent;background:transparent;color:var(--text-mute);}
+
   table{width:100%;border-collapse:collapse;font-size:13px;}
-  th{text-align:left;color:var(--text-mute);padding:9px 10px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;}
+  th{text-align:left;color:var(--text-mute);font-weight:500;padding:9px 10px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
   td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);}
-  .tablewrap{max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:10px;margin-top:14px;}
+  tbody tr:hover{background:var(--surface2);}
+  .tablewrap{max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:10px;margin-top:14px;}
+
+  .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;}
   .alert{padding:11px 16px;border-radius:10px;font-size:13px;margin-top:14px;}
-  .alert.warn{background:var(--danger-bg);color:var(--danger);}
-  .alert.ok{background:var(--ok-bg);color:var(--ok);}
-  .hide{display:none !important;}
+
+  .filterbar{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:22px;}
+  .filterbar label{font-size:12px;color:var(--text-mute);display:block;margin-bottom:5px;}
+  .filterbar input[type=date], .filterbar input[type=time]{font-family:'IBM Plex Mono',monospace;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;background:var(--surface2);color:var(--text);height:38px;}
+  .filterbar input[type=time]{width:100px;}
+  html[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator,
+  html[data-theme="dark"] input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.6);}
+  .field-group{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;background:var(--surface2);overflow:hidden;}
+  .field-group input[type=date], .field-group input[type=time]{border:none;border-radius:0;background:transparent;}
+  .field-group input[type=time]{border-left:1px solid var(--border);}
+
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
   .kpi{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+  .kpi .label{font-size:12px;color:var(--text-mute);margin-bottom:8px;}
   .kpi .val{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;}
+  .kpi .foot{font-size:11px;color:var(--text-mute);margin-top:4px;}
+
+  .turnos{display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:14px;margin-bottom:22px;}
+  .turno-card{border:1px solid var(--border);border-radius:14px;padding:20px;background:var(--surface2);}
+  .turno-card style {border-top-width: 4px;}
+  .turno-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+  .turno-head h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;margin:0;}
+  .turno-head .pct{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;}
+  .bar{height:9px;border-radius:6px;background:var(--border);overflow:hidden;margin-bottom:10px;}
+  .bar > div{height:100%;border-radius:6px;}
+  .turno-stats{display:flex;justify-content:space-between;font-size:13px;color:var(--text-mute);}
+  .turno-stats b{color:var(--text);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+
+  .panels{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:8px;}
+  @media(max-width: 768px){ .panels{grid-template-columns: 1fr;} }
+  .panel{border:1px solid var(--border);border-radius:14px;padding:20px;background:var(--surface2);}
+  .panel h3{font-family:'Barlow Condensed',sans-serif;font-size:16px;margin:0 0 16px;font-weight:600;}
+  .area-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;}
+  .area-row .aname{width:120px;color:var(--text-soft);flex-shrink:0;}
+  .area-row .abar{flex:1;height:8px;border-radius:6px;background:var(--border);overflow:hidden;}
+  .area-row .abar>div{height:100%;border-radius:6px;}
+  .area-row .apct{width:42px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--text-mute);}
+  .trend-row{display:flex;align-items:flex-end;gap:6px;height:90px;}
+  .trend-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
+  .trend-bar{width:100%;border-radius:4px 4px 0 0;background:var(--accent);}
+  .trend-lbl{font-size:10px;color:var(--text-mute);font-family:'IBM Plex Mono',monospace;}
+
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:6px;}
+  .section-title h2{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:600;margin:0;}
+  .searchbox{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;width:220px;font-family:'Inter',sans-serif;background:var(--surface2);color:var(--text);outline:none;}
+  .searchbox:focus{border-color:var(--accent);}
+
+  .empty{padding:28px;text-align:center;color:var(--text-mute);font-size:13px;}
+  .hide{display:none !important;}
+  .small{font-size:12px;color:var(--text-mute);}
+  .pill-day{display:inline-block;padding:4px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:12px;margin:3px 6px 0 0;color:var(--text-soft);}
+  ::placeholder{color:var(--text-mute);}
 </style>
 </head>
 <body>
-<div class="wrap">
 
+<div id="login-screen" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center;">
+  <div class="card" style="width:360px; padding:32px; text-align:center; border-color:var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+    <div style="width:46px; height:46px; border-radius:10px; background:var(--accent-bg); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:22px; margin:0 auto 14px;">&#9670;</div>
+    <h2 style="margin-bottom:4px; font-size:24px;">Control de Almuerzos</h2>
+    <p class="sub" style="margin-bottom:24px;">Centro de Distribución Huaycoloro</p>
+    
+    <input type="text" id="login-user" placeholder="Usuario" class="searchbox" style="width:100%; margin-bottom:12px; height:42px;">
+    <input type="password" id="login-pass" placeholder="Contraseña" class="searchbox" style="width:100%; margin-bottom:22px; height:42px;">
+    
+    <button class="primary" id="btn-login" style="width:100%; height:42px; font-size:14px;">Ingresar y Sincronizar</button>
+    <div id="login-alert" style="margin-top:14px; font-size:13px; font-weight:500; min-height:18px;"></div>
+  </div>
+</div>
+
+<div class="wrap">
   <header class="app">
-    <div class="brand"><h1>Control de Almuerzos</h1></div>
-    <div class="steps">
-      <div class="step-pill" id="pill-1">1. Personal</div>
-      <div class="step-pill" id="pill-2">2. Pedidos</div>
-      <div class="step-pill" id="pill-3">3. Dashboard</div>
+    <div class="brand">
+      <div class="tag">&#9670;</div>
+      <div>
+        <h1>Control de almuerzos</h1>
+        <p>Centro de Distribución Integral Huaycoloro</p>
+      </div>
     </div>
-    <div>
-      <button id="btn-auth" class="google-btn">🌐 Conectar Google Account</button>
-      <span id="user-logged" class="mono" style="font-size:12px; color:var(--ok); margin-left:8px; display:none;">● Autenticado</span>
+    <div class="steps">
+      <div class="step-pill done" id="pill-1"><span class="n">1</span>Personal</div>
+      <div class="step-pill done" id="pill-2"><span class="n">2</span>Pedidos</div>
+      <div class="step-pill active" id="pill-3"><span class="n">3</span>Dashboard</div>
+    </div>
+    <div class="row" style="align-items:center;">
+      <div class="clock">
+        <div class="time" id="clock-time">--:--</div>
+        <div class="date" id="clock-date">—</div>
+      </div>
+      <button id="theme-toggle" title="Cambiar tema" style="height:42px;">&#9788; / &#9789;</button>
     </div>
   </header>
 
-  <!-- STEP 1 -->
-  <section id="step1" class="card">
-    <h2>1. Lista de Personal</h2>
-    <p class="sub">Vincúlate directamente a tu archivo de Drive sin configuraciones manuales repetitivas.</p>
-    
-    <div class="split-options">
-      <div class="google-sync-box">
-        <div>
-          <h3 style="margin:0 0 4px; font-size:15px;">⚡ Acceso Automatizado</h3>
-          <p style="font-size:12px; color:var(--text-soft); margin:0 0 14px;" id="lbl-file-1">Ningún archivo seleccionado</p>
-        </div>
-        <button class="primary" id="btn-pick-staff" style="background:var(--a); border-color:var(--a);" disabled>🔍 Elegir de Drive</button>
-      </div>
-      <div class="dropzone" id="drop-1">
-        <strong>O arrastra el Excel local aquí</strong>
-        <input type="file" id="file-1" accept=".xlsx,.xls,.csv" style="display:none;">
-      </div>
+  <section id="step3" class="card">
+    <div class="section-title">
+      <h2 style="font-size:22px;">Dashboard en Tiempo Real</h2>
+      <button id="btn-re-sync" style="background:var(--ok-bg); color:var(--ok); border-color:var(--ok); font-weight:600;">🔄 Sincronizar Hojas Ahora</button>
     </div>
-    <div id="alert-1"></div>
-    <div id="preview-1"></div>
-    <div class="row" style="margin-top:18px;justify-content:flex-end;"><button class="primary" id="next-1" disabled>Continuar →</button></div>
-  </section>
 
-  <!-- STEP 2 -->
-  <section id="step2" class="card hide">
-    <h2>2. Archivo de Respuestas / Pedidos</h2>
-    <p class="sub">Selecciona el origen de datos para los menús del día.</p>
-    
-    <div class="split-options">
-      <div class="google-sync-box">
-        <div>
-          <h3 style="margin:0 0 4px; font-size:15px;">⚡ Acceso Automatizado</h3>
-          <p style="font-size:12px; color:var(--text-soft); margin:0 0 14px;" id="lbl-file-2">Ningún archivo seleccionado</p>
+    <div class="filterbar">
+      <div>
+        <label>Desde</label>
+        <div class="field-group">
+          <input type="date" id="date-from">
+          <input type="time" id="time-from" value="00:00">
         </div>
-        <button class="primary" id="btn-pick-orders" style="background:var(--ok); border-color:var(--ok); color:#06241A;" disabled>🔍 Elegir de Drive</button>
       </div>
-      <div class="dropzone" id="drop-2">
-        <strong>O arrastra el Excel de Pedidos aquí</strong>
-        <input type="file" id="file-2" accept=".xlsx,.xls,.csv" style="display:none;">
+      <div>
+        <label>Hasta</label>
+        <div class="field-group">
+          <input type="date" id="date-to">
+          <input type="time" id="time-to" value="23:59">
+        </div>
       </div>
+      <button id="btn-today">Hoy</button>
+      <button id="btn-all-range">Todo el rango cargado</button>
     </div>
-    <div id="alert-2"></div>
-    <div id="preview-2"></div>
-    <div class="row" style="margin-top:18px;justify-content:space-between;">
-      <button id="back-2">← Volver</button>
-      <button class="primary" id="next-2" disabled>Procesar Dashboard →</button>
-    </div>
-  </section>
+    <p class="small" style="margin:-12px 0 18px;">La hora afecta solo los pedidos del primer y último día del rango — útil si quieres ver lo registrado antes del corte.</p>
 
-  <!-- STEP 3 -->
-  <section id="step3" class="card hide">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <h2>Dashboard Automatizado</h2>
-      <div class="row">
-        <button id="btn-reload-drive" style="background:var(--ok-bg); color:var(--ok); border-color:var(--ok);" class="hide">🔄 Sincronizar Drive Ahora</button>
-        <button id="btn-clear" style="color:var(--danger); border-color:var(--danger);">Limpiar todo</button>
-      </div>
-    </div>
-    
     <div class="kpis">
-      <div class="kpi"><div>Personal Base</div><div class="val" id="kpi-total">0</div></div>
-      <div class="kpi"><div>Pedidos Registrados</div><div class="val" id="kpi-ord" style="color:var(--ok);">0</div></div>
-      <div class="kpi"><div>Faltantes</div><div class="val" id="kpi-miss" style="color:var(--danger);">0</div></div>
+      <div class="kpi"><div class="label">Personal total</div><div class="val" id="kpi-total">0</div><div class="foot" id="kpi-total-foot">&nbsp;</div></div>
+      <div class="kpi"><div class="label">Esperados en el rango</div><div class="val" id="kpi-expected">0</div><div class="foot" id="kpi-expected-foot">&nbsp;</div></div>
+      <div class="kpi"><div class="label">Ya confirmaron</div><div class="val" id="kpi-ordered" style="color:var(--ok);">0</div><div class="foot" id="kpi-ordered-foot">&nbsp;</div></div>
+      <div class="kpi"><div class="label">Faltan por pedir</div><div class="val" id="kpi-missing" style="color:var(--danger);">0</div><div class="foot" id="kpi-missing-foot">&nbsp;</div></div>
     </div>
-    <button id="back-3">← Cambiar Orígenes</button>
-  </section>
 
+    <div class="turnos" id="turnos-grid"></div>
+
+    <div class="panels">
+      <div class="panel">
+        <h3>Cumplimiento por área</h3>
+        <div id="area-breakdown"></div>
+      </div>
+      <div class="panel">
+        <h3>Tendencia (% del día, últimos puntos del rango)</h3>
+        <div class="trend-row" id="trend-row"></div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2>Días en el rango</h2>
+    </div>
+    <div id="days-row" style="margin-bottom:22px;"></div>
+
+    <div class="section-title">
+      <h2>Faltan por pedir</h2>
+      <input class="searchbox" id="search-missing" placeholder="Buscar por nombre o DNI">
+    </div>
+    <div class="tablewrap" style="max-height:320px;">
+      <table>
+        <thead><tr><th>Fecha</th><th>Turno</th><th>Nombre</th><th>DNI</th><th>Área</th></tr></thead>
+        <tbody id="tbody-missing"></tbody>
+      </table>
+    </div>
+
+    <div class="section-title" style="margin-top:22px;">
+      <h2>Pedidos registrados</h2>
+      <div class="row">
+        <input class="searchbox" id="search-orders" placeholder="Buscar por nombre, DNI o menú">
+        <button id="btn-export-orders" class="primary">&#8595; Exportar a Excel</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Turno</th><th>Nombre</th><th>DNI</th><th>Menú</th></tr></thead>
+        <tbody id="tbody-orders"></tbody>
+      </table>
+    </div>
+  </section>
 </div>
 
 <script>
-// ==========================================
-// CONFIGURACIÓN OBLIGATORIA DE GOOGLE DEVELOPERS
-// ==========================================
-const CLIENT_ID = 'TU_CLIENT_ID_AQUÍ.apps.googleusercontent.com';
-const API_KEY = 'TU_API_KEY_AQUÍ';
-const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+// ============================================================================
+// CONFIGURACIÓN DE URLS Y ACCESOS (MODIFICA AQUÍ)
+// ============================================================================
+const ACCESS_USER = 'admin';
+const ACCESS_PASS = 'Despacho2026';
 
-let tokenClient;
-let accessToken = localStorage.getItem('drive_access_token') || null;
-let staffFileId = localStorage.getItem('drive_staff_file_id') || null;
-let ordersFileId = localStorage.getItem('drive_orders_file_id') || null;
+const URL_SHEET_PERSONAL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR6mATnUg5GMp6IrjCstPeaXfZ4jCzzTyf8wpAVjbtAmAO8ixeizXxAyV8nc16nlw/pub?output=csv';
+const URL_SHEET_PEDIDOS  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTD15NzCuyvPlX4P9jI82sIsuJh2MDRmSI3FVvYbuEoQ8AdJ0XqLHo6-jMUO8y29qDLoV0K1o9g9p-Y/pub?output=csv';
 
+// ============================================================================
+// VARIABLES GLOBALES
+// ============================================================================
 let staff = [];
 let orders = [];
+let turnoGroups = [];
+let lastOrdersExport = [];
+const palette = [
+  {color:'var(--a)', bg:'var(--a-bg)'},
+  {color:'var(--b)', bg:'var(--b-bg)'},
+  {color:'var(--c)', bg:'var(--c-bg)'}
+];
 
-// Inicialización de APIs de Google
-window.onload = function() {
-  gapi.load('client:picker', () => gapi.client.init({apiKey: API_KEY, discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]}));
-  
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: (resp) => {
-      if (resp.error) return;
-      accessToken = resp.access_token;
-      localStorage.setItem('drive_access_token', accessToken);
-      document.getElementById('user-logged').style.display = 'inline';
-      document.getElementById('btn-pick-staff').disabled = false;
-      document.getElementById('btn-pick-orders').disabled = false;
-      
-      // Si ya teníamos archivos guardados en sesiones anteriores, los procesa al vuelo
-      if(staffFileId || ordersFileId) autoFetchSavedFiles();
+// ============================================================================
+// MANEJADOR LOGIN Y FETCH AUTOMÁTICO
+// ============================================================================
+document.getElementById('btn-login').onclick = async () => {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const alertEl = document.getElementById('login-alert');
+
+  if (user === ACCESS_USER && pass === ACCESS_PASS) {
+    alertEl.style.color = 'var(--ok)';
+    alertEl.textContent = '⏳ Sincronizando con Google Sheets...';
+    document.getElementById('btn-login').disabled = true;
+    
+    const success = await fetchAllData();
+    if(success) {
+      document.getElementById('login-screen').classList.add('hide');
+      renderDashboard();
+    } else {
+      document.getElementById('btn-login').disabled = false;
+      alertEl.style.color = 'var(--danger)';
+      alertEl.textContent = '❌ Error de descarga. Revisa los links internos.';
     }
-  });
-
-  if(accessToken) {
-    gapi.client.setToken({access_token: accessToken});
-    document.getElementById('user-logged').style.display = 'inline';
-    document.getElementById('btn-pick-staff').disabled = false;
-    document.getElementById('btn-pick-orders').disabled = false;
-    autoFetchSavedFiles();
+  } else {
+    alertEl.style.color = 'var(--danger)';
+    alertEl.textContent = '❌ Credenciales inválidas';
   }
 };
 
-document.getElementById('btn-auth').onclick = () => tokenClient.requestAccessToken({prompt: 'consent'});
+document.getElementById('btn-re-sync').onclick = async () => {
+  const btn = document.getElementById('btn-re-sync');
+  btn.textContent = '⏳ Sincronizando...';
+  btn.disabled = true;
+  const success = await fetchAllData();
+  if(success) computeAndRender();
+  btn.textContent = '🔄 Sincronizar Hojas Ahora';
+  btn.disabled = false;
+};
 
-// Control del Google Picker (Explorador de Archivos Nativo)
-function createPicker(targetType) {
-  const view = new google.picker.View(google.picker.ViewId.DOCS);
-  view.setMimeTypes("application/vnd.google-apps.spreadsheet,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv");
-  
-  const picker = new google.picker.PickerBuilder()
-    .addView(view)
-    .setOAuthToken(accessToken)
-    .setDeveloperKey(API_KEY)
-    .setCallback((data) => {
-      if (data.action == google.picker.Action.PICKED) {
-        const doc = data.docs[0];
-        if(targetType === 'staff') {
-          staffFileId = doc.id;
-          localStorage.setItem('drive_staff_file_id', doc.id);
-          document.getElementById('lbl-file-1').textContent = `✓ Conectado: ${doc.name}`;
-          fetchFileFromDrive(doc.id, 'staff');
-        } else {
-          ordersFileId = doc.id;
-          localStorage.setItem('drive_orders_file_id', doc.id);
-          document.getElementById('lbl-file-2').textContent = `✓ Conectado: ${doc.name}`;
-          fetchFileFromDrive(doc.id, 'orders');
-        }
-      }
-    })
-    .build();
-  picker.setVisible(true);
-}
-
-document.getElementById('btn-pick-staff').onclick = () => createPicker('staff');
-document.getElementById('btn-pick-orders').onclick = () => createPicker('orders');
-
-// Descarga y conversión del archivo desde Drive en Segundo Plano
-async function fetchFileFromDrive(fileId, target) {
+async function fetchAllData() {
   try {
-    // Intenta descargarlo directamente como formato binario Excel o lo convierte a CSV si es nativo de Google Sheets
-    let response;
-    try {
-      response = await gapi.client.drive.files.export({ fileId: fileId, mimeType: 'text/csv' });
-    } catch(e) {
-      response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
-    }
-    
-    const wb = XLSX.read(response.body, {type: 'string'});
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''});
-    
-    if(target === 'staff') processStaff(rows);
-    else processOrders(rows);
-    
-    if(staffFileId && ordersFileId) document.getElementById('btn-reload-drive').classList.remove('hide');
-  } catch (err) {
-    console.error("Error leyendo archivo de Drive", err);
-    // Si el token expiró silenciosamente, refrescarlo
-    if(err.status === 401) tokenClient.requestAccessToken({prompt: ''});
+    const [resPersonal, resPedidos] = await Promise.all([
+      fetch(URL_SHEET_PERSONAL).then(r => { if(!r.ok) throw new Error(); return r.arrayBuffer(); }),
+      fetch(URL_SHEET_PEDIDOS).then(r => { if(!r.ok) throw new Error(); return r.arrayBuffer(); })
+    ]);
+
+    // Parsear Personal
+    const wbStaff = XLSX.read(new Uint8Array(resPersonal), {type: 'array'});
+    const rowsStaff = XLSX.utils.sheet_to_json(wbStaff.Sheets[wbStaff.SheetNames[0]], {header:1, raw:false, defval:''});
+    processStaffRows(rowsStaff);
+
+    // Parsear Pedidos
+    const wbOrders = XLSX.read(new Uint8Array(resPedidos), {type: 'array'});
+    const rowsOrders = XLSX.utils.sheet_to_json(wbOrders.Sheets[wbOrders.SheetNames[0]], {header:1, raw:false, defval:''});
+    processOrdersRows(rowsOrders);
+
+    return true;
+  } catch (error) {
+    console.error("Error en Fetching:", error);
+    return false;
   }
 }
 
-async function autoFetchSavedFiles() {
-  if(staffFileId) {
-    document.getElementById('lbl-file-1').textContent = "✓ Cargando enlace automático...";
-    await fetchFileFromDrive(staffFileId, 'staff');
+function processStaffRows(rows) {
+  if(!rows.length) return;
+  const headers = rows[0];
+  const iNombre = findCol(headers, ['nombre','nombre completo','nombres']);
+  const iDni = findCol(headers, ['dni','documento']);
+  const iTurno = findCol(headers, ['turno']);
+  const iArea = findCol(headers, ['area','zona','departamento']);
+  
+  staff = [];
+  for(let r=1; r<rows.length; r++){
+    const row = rows[r];
+    if(!row || row.every(c=>c==='')) continue;
+    const dni = normDni(row[iDni]);
+    if(!dni) continue;
+    staff.push({
+      nombre: String(row[iNombre]||'').trim(),
+      dni,
+      turno: String(row[iTurno]||'').trim(),
+      area: iArea>=0 ? (String(row[iArea]||'').trim() || 'Sin área') : 'Sin área'
+    });
   }
-  if(ordersFileId) {
-    document.getElementById('lbl-file-2').textContent = "✓ Cargando enlace automático...";
-    await fetchFileFromDrive(ordersFileId, 'orders');
+  buildTurnoGroups();
+}
+
+function processOrdersRows(rows) {
+  if(!rows.length) return;
+  const headers = rows[0];
+  const iFecha = findCol(headers, ['fecha']);
+  const iTurno = findCol(headers, ['turno']);
+  const iNombre = findCol(headers, ['nombre completo','nombre','nombres']);
+  const iDni = findCol(headers, ['dni','documento']);
+  const iMenu = findCol(headers, ['menu']);
+  
+  orders = [];
+  for(let r=1; r<rows.length; r++){
+    const row = rows[r];
+    if(!row || row.every(c=>c==='')) continue;
+    const dni = normDni(row[iDni]);
+    if(!dni) continue;
+    const iso = excelDateToISO(row[iFecha]);
+    if(!iso) continue;
+    orders.push({
+      fecha: iso,
+      hora: extractTime(row[iFecha]),
+      turno: String(row[iTurno]||'').trim(),
+      nombre: iNombre>=0 ? String(row[iNombre]||'').trim() : '',
+      dni,
+      menu: iMenu>=0 ? String(row[iMenu]||'').trim() : ''
+    });
   }
 }
 
-document.getElementById('btn-reload-drive').onclick = async () => {
-  document.getElementById('btn-reload-drive').textContent = "⏳ Sincronizando...";
-  if(staffFileId) await fetchFileFromDrive(staffFileId, 'staff');
-  if(ordersFileId) await fetchFileFromDrive(ordersFileId, 'orders');
-  computeDashboard();
-  document.getElementById('btn-reload-drive').textContent = "🔄 Sincronizar Drive Ahora";
-};
-
-// ==========================================
-// PROCESAMIENTO LOGICO DE TABLAS
-// ==========================================
+// ============================================================================
+// LÓGICA DE PROCESAMIENTO REUTILIZADA
+// ============================================================================
+function stripAccents(s){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function shiftSignature(v){
+  let s = stripAccents(String(v||'').trim().toLowerCase());
+  if(s.includes('manana') || s.includes(' am') || /\b1\b/.test(s) || s.includes('turno1')) return 'A';
+  if(s.includes('tarde') || s.includes(' pm') || /\b2\b/.test(s) || s.includes('turno2')) return 'B';
+  if(s.includes('noche')) return 'C';
+  return s || 'X';
+}
+function normDni(v){ if(v===undefined||v===null) return ''; return String(v).trim().replace(/\s+/g,''); }
+function excelDateToISO(v){
+  if(v instanceof Date) return v.toISOString().slice(0,10);
+  if(typeof v === 'number'){
+    const d = XLSX.SSF.parse_date_code(v);
+    if(d) return new Date(d.y, d.m-1, d.d).toISOString().slice(0,10);
+  }
+  if(typeof v === 'string'){
+    let s = v.trim();
+    let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    let d2 = new Date(s);
+    if(!isNaN(d2)) return d2.toISOString().slice(0,10);
+  }
+  return null;
+}
+function extractTime(v){
+  if(v instanceof Date){
+    const h = v.getHours(), m = v.getMinutes();
+    if(h!==0 || m!==0) return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  }
+  if(typeof v === 'string'){
+    const m = v.match(/(\d{1,2}):(\d{2})/);
+    if(m) return m[1].padStart(2,'0')+':'+m[2];
+  }
+  return null;
+}
+function fmtDate(iso){ const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
 function findCol(headers, candidates){
-  const norm = h => String(h).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const norm = h => stripAccents(String(h).trim().toLowerCase());
+  for(const c of candidates){ const idx = headers.findIndex(h => norm(h) === c); if(idx>=0) return idx; }
   for(const c of candidates){ const idx = headers.findIndex(h => norm(h).includes(c)); if(idx>=0) return idx; }
   return -1;
 }
-
-function processStaff(rows) {
-  if(!rows.length) return;
-  const h = rows[0];
-  const iNom = findCol(h, ['nombre','completo']);
-  const iDni = findCol(h, ['dni','documento']);
-  if(iNom < 0 || iDni < 0) { alert("Archivo de personal inválido. Debe contener columnas Nombre y DNI."); return; }
-  
-  staff = rows.slice(1).filter(r => r[iNom]).map(r => ({ nombre: String(r[iNom]).trim(), dni: String(r[iDni]).trim() }));
-  document.getElementById('alert-1').innerHTML = `<div class="alert ok">Cargados ${staff.length} colaboradores desde Drive de forma directa.</div>`;
-  document.getElementById('next-1').disabled = false;
+function buildTurnoGroups(){
+  const map = new Map();
+  staff.forEach(s=>{
+    const sig = shiftSignature(s.turno);
+    if(!map.has(sig)) map.set(sig, s.turno || sig);
+  });
+  turnoGroups = [...map.entries()].map(([sig,label],i)=>({sig, label, ...palette[i%palette.length]}));
+}
+function turnoBadge(turnoRaw){
+  const sig = shiftSignature(turnoRaw);
+  const g = turnoGroups.find(g=>g.sig===sig);
+  const label = g ? g.label : (turnoRaw || '—');
+  const color = g ? g.color : 'var(--text-mute)';
+  const bg = g ? g.bg : 'var(--surface2)';
+  return `<span class="badge" style="color:${color};background:${bg};">${label}</span>`;
 }
 
-function processOrders(rows) {
-  if(!rows.length) return;
-  const h = rows[0];
-  const iDni = findCol(h, ['dni','documento']);
-  if(iDni < 0) { alert("Archivo de pedidos inválido. Debe contener columna DNI."); return; }
-  
-  orders = rows.slice(1).filter(r => r[iDni]).map(r => ({ dni: String(r[iDni]).trim() }));
-  document.getElementById('alert-2').innerHTML = `<div class="alert ok">Cargados ${orders.length} pedidos detectados en el formulario.</div>`;
-  document.getElementById('next-2').disabled = false;
+// Clock
+function tickClock(){
+  const now = new Date();
+  document.getElementById('clock-time').textContent = now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('clock-date').textContent = now.toLocaleDateString('es-PE',{weekday:'long',day:'numeric',month:'long'});
+}
+tickClock(); setInterval(tickClock, 30000);
+
+function dniToStaffMap(){ const m = new Map(); staff.forEach(s=> m.set(s.dni, s)); return m; }
+function getRangeDates(){
+  return {
+    from: document.getElementById('date-from').value,
+    to: document.getElementById('date-to').value,
+    timeFrom: document.getElementById('time-from').value || '00:00',
+    timeTo: document.getElementById('time-to').value || '23:59'
+  };
 }
 
-// Navegación Básica e Interfaz
-function go(step) { [1,2,3].forEach(i => { document.getElementById('step'+i).classList.toggle('hide', i!==step); document.getElementById('pill-'+i).classList.toggle('active', i===step); }); }
-document.getElementById('next-1').onclick = () => go(2);
-document.getElementById('back-2').onclick = () => go(1);
-document.getElementById('back-3').onclick = () => go(2);
-document.getElementById('next-2').onclick = () => { go(3); computeDashboard(); };
-
-function computeDashboard() {
-  document.getElementById('kpi-total').textContent = staff.length;
-  const setOrders = new Set(orders.map(o => o.dni));
-  let validados = 0;
-  staff.forEach(s => { if(setOrders.has(s.dni)) validados++; });
-  
-  document.getElementById('kpi-ord').textContent = validados;
-  document.getElementById('kpi-miss').textContent = staff.length - validados;
+// Theme
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('almacen-theme', t);
+}
+(function initTheme(){
+  const saved = localStorage.getItem('almacen-theme') || 'light';
+  applyTheme(saved);
+})();
+document.getElementById('theme-toggle').onclick = ()=>{
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+};
+function eachDateInRange(from, to){
+  const out = []; let d = new Date(from+'T00:00:00'); const end = new Date(to+'T00:00:00');
+  while(d<=end){ out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+  return out;
 }
 
-document.getElementById('btn-clear').onclick = () => {
-  localStorage.clear();
-  location.reload();
+function renderDashboard(){
+  if(orders.length){
+    const dates = orders.map(o=>o.fecha).sort();
+    document.getElementById('date-from').value = dates[0];
+    document.getElementById('date-to').value = dates[dates.length-1];
+  } else {
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('date-from').value = today;
+    document.getElementById('date-to').value = today;
+  }
+  buildTurnosGridSkeleton();
+  computeAndRender();
+}
+
+function buildTurnosGridSkeleton(){
+  document.getElementById('turnos-grid').innerHTML = turnoGroups.map(g=>`
+    <div class="turno-card" style="border-top:4px solid ${g.color};" id="card-${g.sig}">
+      <div class="turno-head"><h3>${g.label}</h3><div class="pct" id="pct-${g.sig}" style="color:${g.color};">0%</div></div>
+      <div class="bar"><div id="bar-${g.sig}" style="width:0%;background:${g.color};"></div></div>
+      <div class="turno-stats"><span>Confirmaron <b id="ord-${g.sig}">0</b></span><span>Faltan <b id="miss-${g.sig}">0</b></span></div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('date-from').onchange = computeAndRender;
+document.getElementById('date-to').onchange = computeAndRender;
+document.getElementById('time-from').onchange = computeAndRender;
+document.getElementById('time-to').onchange = computeAndRender;
+
+document.getElementById('btn-today').onclick = ()=>{
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('date-from').value = today;
+  document.getElementById('date-to').value = today;
+  document.getElementById('time-from').value = '00:00';
+  document.getElementById('time-to').value = '23:59';
+  computeAndRender();
+};
+document.getElementById('btn-all-range').onclick = renderDashboard;
+document.getElementById('search-missing').oninput = computeAndRender;
+document.getElementById('search-orders').oninput = computeAndRender;
+
+document.getElementById('btn-export-orders').onclick = ()=>{
+  if(!lastOrdersExport.length){ alert('No hay pedidos para exportar en este rango.'); return; }
+  const ws = XLSX.utils.json_to_sheet(lastOrdersExport, {header:['DNI','Turno','Nombre','Fecha','Menu']});
+  ws['!cols']=[{wch:12},{wch:12},{wch:26},{wch:12},{wch:28}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
+  const {from,to} = getRangeDates();
+  XLSX.writeFile(wb, `pedidos_${from}_a_${to}.xlsx`);
 };
 
-// Soporte para Drag & Drop clásico (Sigue activo como Opción B)
-function hookDrop(id, callback) {
-  const el = document.getElementById(id);
-  el.onclick = () => el.querySelector('input').click();
-  el.querySelector('input').onchange = e => { if(e.target.files[0]) readLocal(e.target.files[0], callback); };
-  el.onsubmit = e => e.preventDefault();
-  el.addEventListener('dragover', e => { e.preventDefault(); });
-  el.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files[0]) readLocal(e.dataTransfer.files[0], callback); });
+function computeAndRender(){
+  const {from,to,timeFrom,timeTo} = getRangeDates();
+  if(!from||!to) return;
+  const dateList = eachDateInRange(from,to);
+  const staffMap = dniToStaffMap();
+
+  function orderInRange(o){
+    if(o.fecha<from || o.fecha>to) return false;
+    const hora = o.hora || '12:00';
+    if(o.fecha===from && hora < timeFrom) return false;
+    if(o.fecha===to && hora > timeTo) return false;
+    return true;
+  }
+
+  const orderedByDayTurno = new Map();
+  orders.forEach(o=>{
+    if(!orderInRange(o)) return;
+    const sig = shiftSignature(o.turno);
+    const key = o.fecha+'|'+sig;
+    if(!orderedByDayTurno.has(key)) orderedByDayTurno.set(key, new Set());
+    orderedByDayTurno.get(key).add(o.dni);
+  });
+
+  let totalExpected=0, totalOrdered=0;
+  const groupTotals = {};
+  turnoGroups.forEach(g=> groupTotals[g.sig] = {expected:0, ordered:0, list: staff.filter(s=>shiftSignature(s.turno)===g.sig)});
+  const missingRows = [];
+  const areaTotals = {};
+
+  dateList.forEach(date=>{
+    turnoGroups.forEach(g=>{
+      const list = groupTotals[g.sig].list;
+      const key = date+'|'+g.sig;
+      const orderedSet = orderedByDayTurno.get(key) || new Set();
+      const orderedCount = [...orderedSet].filter(d=>staffMap.has(d)).length;
+      totalExpected += list.length; totalOrdered += orderedCount;
+      groupTotals[g.sig].expected += list.length; groupTotals[g.sig].ordered += orderedCount;
+      list.forEach(s=>{
+        if(!areaTotals[s.area]) areaTotals[s.area] = {expected:0, ordered:0};
+        areaTotals[s.area].expected++;
+        if(orderedSet.has(s.dni)){ areaTotals[s.area].ordered++; }
+        else { missingRows.push({fecha:date, turno:g.label, nombre:s.nombre, dni:s.dni, area:s.area}); }
+      });
+    });
+  });
+
+  document.getElementById('kpi-total').textContent = staff.length;
+  document.getElementById('kpi-expected').textContent = totalExpected;
+  document.getElementById('kpi-ordered').textContent = totalOrdered;
+  document.getElementById('kpi-missing').textContent = totalExpected-totalOrdered;
+  document.getElementById('kpi-ordered-foot').textContent = totalExpected? Math.round(totalOrdered/totalExpected*100)+'% del total esperado' : '—';
+  document.getElementById('kpi-missing-foot').textContent = dateList.length>1 ? `en ${dateList.length} días` : 'hoy';
+  document.getElementById('kpi-total-foot').textContent = turnoGroups.map(g=>`${g.label}: ${groupTotals[g.sig].list.length}`).join(' · ');
+  document.getElementById('kpi-expected-foot').textContent = `${dateList.length} día(s) x personal de cada turno`;
+
+  turnoGroups.forEach(g=>{
+    const t = groupTotals[g.sig];
+    const pct = t.expected? Math.round(t.ordered/t.expected*100) : 0;
+    document.getElementById('pct-'+g.sig).textContent = pct+'%';
+    document.getElementById('bar-'+g.sig).style.width = pct+'%';
+    document.getElementById('ord-'+g.sig).textContent = t.ordered;
+    document.getElementById('miss-'+g.sig).textContent = t.expected-t.ordered;
+  });
+
+  const areaRows = Object.entries(areaTotals).map(([area,t])=>({area, pct: t.expected? Math.round(t.ordered/t.expected*100):0}))
+    .sort((a,b)=>a.pct-b.pct);
+  document.getElementById('area-breakdown').innerHTML = areaRows.length ? areaRows.map(r=>{
+    const col = r.pct>=90? 'var(--ok)' : r.pct>=70? 'var(--accent)' : 'var(--danger)';
+    return `<div class="area-row"><div class="aname">${r.area}</div><div class="abar"><div style="width:${r.pct}%;background:${col};"></div></div><div class="apct">${r.pct}%</div></div>`;
+  }).join('') : '<div class="small">Sin datos de área (agrega la columna Área al Excel de personal).</div>';
+
+  const trendDates = dateList.slice(-7);
+  document.getElementById('trend-row').innerHTML = trendDates.length ? trendDates.map(d=>{
+    let exp=0, ord=0;
+    turnoGroups.forEach(g=>{
+      const list = groupTotals[g.sig].list;
+      const key = d+'|'+g.sig;
+      const orderedSet = orderedByDayTurno.get(key) || new Set();
+      exp += list.length; ord += [...orderedSet].filter(x=>staffMap.has(x)).length;
+    });
+    const pct = exp? Math.round(ord/exp*100):0;
+    return `<div class="trend-col"><div class="trend-bar" style="height:${Math.max(pct,3)}%;"></div><div class="trend-lbl">${pct}%</div><div class="trend-lbl">${d.slice(8)}/${d.slice(5,7)}</div></div>`;
+  }).join('') : '<div class="small">Sin días.</div>';
+
+  document.getElementById('days-row').innerHTML = dateList.map(d=>{
+    const parts = turnoGroups.map(g=>{
+      const o = (orderedByDayTurno.get(d+'|'+g.sig)||new Set()).size;
+      return `${g.label}: ${o}/${groupTotals[g.sig].list.length}`;
+    }).join(' · ');
+    return `<span class="pill-day">${fmtDate(d)} — ${parts}</span>`;
+  }).join('') || '<span class="small">Sin días en el rango.</span>';
+
+  const qm = document.getElementById('search-missing').value.trim().toLowerCase();
+  const filteredMissing = missingRows.filter(r=> !qm || r.nombre.toLowerCase().includes(qm) || r.dni.includes(qm));
+  document.getElementById('tbody-missing').innerHTML = filteredMissing.length ? filteredMissing.map(r=>`
+    <tr><td class="mono">${fmtDate(r.fecha)}</td><td>${turnoBadge(r.turno)}</td><td>${r.nombre||'—'}</td><td class="mono">${r.dni}</td><td>${r.area}</td></tr>
+  `).join('') : `<tr><td colspan="5" class="empty">Nadie falta por pedir en este rango.</td></tr>`;
+
+  const qo = document.getElementById('search-orders').value.trim().toLowerCase();
+  const ordersInRange = orders.filter(orderInRange)
+    .filter(o=> !qo || (o.nombre||'').toLowerCase().includes(qo) || o.dni.includes(qo) || (o.menu||'').toLowerCase().includes(qo))
+    .sort((a,b)=> a.fecha<b.fecha?1:-1);
+  document.getElementById('tbody-orders').innerHTML = ordersInRange.length ? ordersInRange.map(o=>{
+    const s = staffMap.get(o.dni);
+    const nombre = s ? s.nombre : (o.nombre || '—');
+    return `<tr><td class="mono">${fmtDate(o.fecha)}</td><td>${turnoBadge(o.turno)}</td><td>${nombre}</td><td class="mono">${o.dni}</td><td>${o.menu||'—'}</td></tr>`;
+  }).join('') : `<tr><td colspan="5" class="empty">No hay pedidos en este rango.</td></tr>`;
+
+  lastOrdersExport = ordersInRange.map(o=>{
+    const s = staffMap.get(o.dni);
+    return {
+      DNI: o.dni,
+      Turno: turnoGroups.find(g=>g.sig===shiftSignature(o.turno))?.label || o.turno,
+      Nombre: s ? s.nombre : (o.nombre || ''),
+      Fecha: fmtDate(o.fecha),
+      Menu: o.menu || ''
+    };
+  });
 }
-function readLocal(file, callback) {
-  const r = new FileReader();
-  r.onload = e => { const wb = XLSX.read(e.target.result, {type:'array'}); callback(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''})); };
-  r.readAsArrayBuffer(file);
-}
-hookDrop('drop-1', processStaff);
-hookDrop('drop-2', processOrders);
 </script>
 </body>
 </html>
