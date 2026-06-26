@@ -111,7 +111,7 @@
     z-index: 10000; display: flex; flex-direction: column; padding: 30px; box-sizing: border-box;
   }
   .grid-screenshot {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
     gap: 12px; flex: 1; overflow: hidden; align-content: flex-start; margin-top: 20px;
   }
   .item-screenshot {
@@ -269,6 +269,7 @@
       <h2 style="color:var(--ok);">✓ Pedidos Registrados Vigentes</h2>
       <div class="row">
         <input class="searchbox" id="search-orders" placeholder="Buscar por DNI, Nombre o Menú...">
+        <button id="btn-export-orders" class="hide">📥 Exportar Reporte para Firma (Excel)</button>
         <button id="btn-export-word" class="secondary">📄 Formato de Impresión (Word)</button>
       </div>
     </div>
