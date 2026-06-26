@@ -55,6 +55,7 @@
   button:hover{filter:brightness(1.2);}
   button:active{transform:scale(.98);}
   button.primary{background:var(--accent);color:#1A0E08;border-color:var(--accent);font-weight:600;}
+  button.secondary{background:var(--a);color:#fff;border-color:var(--a);font-weight:600;}
   button.primary:disabled{background:var(--surface2);color:var(--text-mute);border-color:var(--border);cursor:not-allowed;transform:none;}
   table{width:100%;border-collapse:collapse;font-size:13px;}
   th{text-align:left;color:var(--text-mute);font-weight:500;padding:10px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;}
@@ -66,8 +67,6 @@
   .filterbar label{font-size:12px;color:var(--text-mute);display:block;margin-bottom:5px;}
   .field-group{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;background:var(--surface2);overflow:hidden;}
   .field-group input{border:none;background:transparent;color:var(--text);padding:8px 10px;font-size:13px;height:38px;font-family:'IBM Plex Mono',monospace;outline:none;}
-  
-  /* REDISEÑO DE ANCHO FIJO PARA LA HORA: Evita recortes en navegadores modernos */
   .field-group input[type=time]{width:115px; border-left:1px solid var(--border); padding-left:8px; padding-right:8px;}
   
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
@@ -105,16 +104,43 @@
   .btn-tpl-inline:hover{border-color:var(--accent);color:var(--text);}
   html[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator,
   html[data-theme="dark"] input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.6);}
+
+  /* Estilos específicos de la visualización en pantalla grande sin Scroll */
+  #screenshot-modal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg);
+    z-index: 10000; display: flex; flex-direction: column; padding: 30px; box-sizing: border-box;
+  }
+  .grid-screenshot {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 12px; flex: 1; overflow: hidden; align-content: flex-start; margin-top: 20px;
+  }
+  .item-screenshot {
+    background: var(--surface2); border: 1px solid var(--border); padding: 10px 14px;
+    border-radius: 8px; font-size: 14px; font-weight: 500; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px;
+  }
 </style>
 </head>
 <body>
+
+<!-- PANTALLA COMPLETA PARA CAPTURAS DE PANTALLA (FALTANTES) -->
+<div id="screenshot-modal" class="hide">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 15px;">
+    <div>
+      <h1 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 28px; color: var(--danger);">🚨 PERSONAL QUE FALTA PEDIR ALMUERZO</h1>
+      <p style="margin: 5px 0 0; font-size: 14px; color: var(--text-soft);">Por favor registrar su menú a la brevedad posible.</p>
+    </div>
+    <button onclick="document.getElementById('screenshot-modal').classList.add('hide')" style="background: var(--danger); color: white; border: none; font-weight: bold; padding: 10px 20px;">✖ Volver al Dashboard</button>
+  </div>
+  <div class="grid-screenshot" id="grid-screenshot-content"></div>
+</div>
 
 <!-- ACCESO INICIAL -->
 <div id="login-screen" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto;">
   <div class="card" style="width:780px; padding:36px; box-shadow: 0 12px 50px rgba(0,0,0,0.5);">
     <div style="width:48px; height:48px; border-radius:12px; background:var(--accent-bg); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:22px; margin:0 auto 16px;">&#9670;</div>
     <h2 style="text-align:center; font-size:24px; margin-bottom:4px;">Control de Almuerzos — CDI</h2>
-    <p class="sub" style="text-align:center; margin-bottom:32px;">Centro de Distribución Integral Huaycoloro</p>
+    <p class="sub" style="text-align:center; margin-bottom:32px;">Platanitos</p>
     
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:36px;">
       <div>
@@ -179,14 +205,14 @@
 
   <section class="card">
     <div class="section-title" style="margin-top:0;">
-      <h2 style="font-size:22px;">Dashboard de Monitoreo Cruzado</h2>
+      <h2 style="font-size:22px;">Centro de Distribución Integral Huaycoloro</h2>
       <div class="row">
         <button id="btn-re-sync-cloud" class="hide" style="background:var(--ok-bg); color:var(--ok); border-color:var(--ok); font-weight:600;">🔄 Sincronizar Nube Ahora</button>
         <button id="btn-log-out" style="border-color:var(--border); color:var(--text-soft);">Cerrar Sesión</button>
       </div>
     </div>
 
-    <!-- FILTRO DE COHORTE CON REDISEÑO DE HORAS COMPLETAS -->
+    <!-- FILTRO DE COHORTE OPTIMIZADO -->
     <div class="filterbar">
       <div>
         <label>Rango Desde (Fecha y Hora)</label>
@@ -202,8 +228,7 @@
           <input type="time" id="time-to">
         </div>
       </div>
-      <button id="btn-today">Restablecer Cohorte Defectada</button>
-      <button id="btn-all-range">Ver Todo el Historial</button>
+      <button id="btn-today" class="primary">Restablecer filtro</button>
     </div>
 
     <div class="kpis">
@@ -221,14 +246,17 @@
         <div id="area-breakdown"></div>
       </div>
       <div class="panel">
-        <h3>Último Estado de Carga</h3>
-        <p style="font-size:13px; color:var(--text-soft); line-height:1.6;" id="sync-meta-lbl">Cargado mediante sesión local.</p>
+        <h3>Cantidad de Pedidos por Menú (%)</h3>
+        <div id="menu-breakdown" style="font-size:13px; line-height:1.6;"></div>
       </div>
     </div>
 
     <div class="section-title">
-      <h2 style="color:var(--danger);">🚨 Faltan por Pedir Almuerzo (No registran marcas en este rango)</h2>
-      <input class="searchbox" id="search-missing" placeholder="Buscar por Nombre, DNI o Área...">
+      <h2 style="color:var(--danger);">🚨 Faltan por Pedir Almuerzo</h2>
+      <div class="row" style="align-items: center;">
+        <input class="searchbox" id="search-missing" placeholder="Buscar por Nombre, DNI o Área...">
+        <button id="btn-view-fullscreen" style="background:var(--danger-bg); color:var(--danger); border-color:var(--danger); font-weight:600;">🖥️ Pantalla Completa</button>
+      </div>
     </div>
     <div class="tablewrap" style="max-height:350px;">
       <table>
@@ -238,10 +266,11 @@
     </div>
 
     <div class="section-title" style="margin-top:28px;">
-      <h2 style="color:var(--ok);">✓ Pedidos Registrados Vigentes (Última marcación limpia por DNI)</h2>
+      <h2 style="color:var(--ok);">✓ Pedidos Registrados Vigentes</h2>
       <div class="row">
         <input class="searchbox" id="search-orders" placeholder="Buscar por DNI, Nombre o Menú...">
-        <button id="btn-export-orders" class="primary">📥 Exportar Reporte a Excel</button>
+        <button id="btn-export-orders" class="hide">📥 Exportar Reporte para Firma (Excel)</button>
+        <button id="btn-export-word" class="secondary">📄 Formato de Impresión (Word)</button>
       </div>
     </div>
     <div class="tablewrap" style="max-height:400px;">
@@ -263,7 +292,8 @@ const GOOGLE_URL_PEDIDOS  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTp
 let staff = [];
 let orders = [];
 let turnoGroups = [];
-let lastOrdersExport = [];
+let currentMissingGlobal = [];
+let currentValidOrdersGlobal = [];
 let rawLocalStaff = null;
 let rawLocalOrders = null;
 
@@ -281,12 +311,6 @@ window.addEventListener('DOMContentLoaded', () => {
   if(cachedStaff && cachedOrders && sessionAuth) {
     staff = JSON.parse(cachedStaff);
     orders = JSON.parse(cachedOrders);
-    if(sessionAuth === 'cloud') {
-      document.getElementById('btn-re-sync-cloud').classList.remove('hide');
-      document.getElementById('sync-meta-lbl').textContent = 'Sincronizado vía Google Sheets (Persistido en pestaña).';
-    } else {
-      document.getElementById('sync-meta-lbl').textContent = 'Cargado mediante archivos locales (Persistido en pestaña).';
-    }
     document.getElementById('login-screen').classList.add('hide');
     buildTurnoGroups();
     initDashboardView();
@@ -306,8 +330,6 @@ document.getElementById('btn-submit-cloud').onclick = async () => {
     const success = await syncGoogleSheetsData();
     if(success) {
       sessionStorage.setItem('cdi_auth', 'cloud');
-      document.getElementById('btn-re-sync-cloud').classList.remove('hide');
-      document.getElementById('sync-meta-lbl').textContent = 'Sincronizado vía Google Sheets.';
       document.getElementById('login-screen').classList.add('hide');
       initDashboardView();
     } else {
@@ -319,15 +341,6 @@ document.getElementById('btn-submit-cloud').onclick = async () => {
     fb.style.color = 'var(--danger)';
     fb.innerHTML = '❌ Acceso denegado. Credenciales incorrectas.';
   }
-};
-
-document.getElementById('btn-re-sync-cloud').onclick = async () => {
-  const btn = document.getElementById('btn-re-sync-cloud');
-  btn.textContent = '⏳ Sincronizando...';
-  btn.disabled = true;
-  if(await syncGoogleSheetsData()) computeAndRender();
-  btn.textContent = '🔄 Sincronizar Nube Ahora';
-  btn.disabled = false;
 };
 
 async function syncGoogleSheetsData() {
@@ -406,8 +419,6 @@ document.getElementById('btn-submit-local').onclick = () => {
   sessionStorage.setItem('cdi_auth', 'local');
   sessionStorage.setItem('cdi_staff', JSON.stringify(staff));
   sessionStorage.setItem('cdi_orders', JSON.stringify(orders));
-  document.getElementById('btn-re-sync-cloud').classList.add('hide');
-  document.getElementById('sync-meta-lbl').textContent = 'Cargado mediante archivos locales.';
   document.getElementById('login-screen').classList.add('hide');
   initDashboardView();
 };
@@ -448,8 +459,6 @@ function parseOrdersMatrix(rows) {
   const iTurno = findCol(headers, ['turno'], 1);
   const iNombre = findCol(headers, ['nombre completo','nombre'], 2);
   const iDni = findCol(headers, ['dni','documento'], 3);
-  
-  // SOLUCIÓN AL MENÚ EN QUINTA COLUMNA: Si no encuentra cabecera, por defecto asume el índice 4 (quinta columna)
   const iMenu = findCol(headers, ['menu','plato','almuerzo','que desea'], 4);
   
   orders = [];
@@ -482,9 +491,6 @@ function parseExcelDateToISO(v) {
   if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   let mRev = dPart.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
   if (mRev) return `${mRev[1]}-${mRev[2].padStart(2,'0')}-${mRev[3].padStart(2,'0')}`;
-  
-  let d2 = new Date(s);
-  if (!isNaN(d2)) return d2.toISOString().slice(0, 10);
   return null;
 }
 
@@ -504,16 +510,14 @@ function parseExcelTimeTo24h(v) {
       return String(hh).padStart(2,'0') + ':' + m[2];
     }
   }
-  let mSimple = s.match(/^(\d{1,2}):(\d{2})/);
-  if (mSimple) return mSimple[1].padStart(2,'0') + ':' + mSimple[2];
   return '12:00';
 }
 
 function stripAccents(s){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 function shiftSignature(v){
   let s = stripAccents(String(v||'').trim().toLowerCase());
-  if(s.includes('manana') || s.includes(' am') || s.includes('turno1') || /\ba\b/.test(s)) return 'A';
-  if(s.includes('tarde') || s.includes(' pm') || s.includes('turno2') || /\bb\b/.test(s)) return 'B';
+  if(s.includes('manana') || s.includes(' am') || s.includes('turno1')) return 'A';
+  if(s.includes('tarde') || s.includes(' pm') || s.includes('turno2')) return 'B';
   if(s.includes('noche') || s.includes('turno3')) return 'C';
   return 'X';
 }
@@ -522,7 +526,7 @@ function findCol(headers, candidates, fallbackIndex){
   const norm = h => stripAccents(String(h).trim().toLowerCase());
   for(const c of candidates){ const idx = headers.findIndex(h => norm(h) === c); if(idx>=0) return idx; }
   for(const c of candidates){ const idx = headers.findIndex(h => norm(h).includes(c)); if(idx>=0) return idx; }
-  return fallbackIndex; // Retorna el índice por defecto si las palabras clave fallan
+  return fallbackIndex;
 }
 
 function buildTurnoGroups(){
@@ -530,28 +534,21 @@ function buildTurnoGroups(){
   staff.forEach(s=>{ const sig = shiftSignature(s.turno); if(!map.has(sig)) map.set(sig, s.turno || 'General'); });
   turnoGroups = [...map.entries()].map(([sig,label],i)=>({sig, label, ...palette[i%palette.length]}));
 }
+
 function turnoBadge(turnoRaw){
   const sig = shiftSignature(turnoRaw); const g = turnoGroups.find(g=>g.sig===sig);
   return `<span class="badge" style="color:${g?g.color:'var(--text-soft)'};background:${g?g.bg:'var(--surface2)'};">${g?g.label:turnoRaw}</span>`;
 }
 
-// ============================================================================
-// CONFIGURACIÓN DE FECHAS DEFAULT EXPRESADAS POR REQUERIMIENTO
-// ============================================================================
 function initDashboardView(){
   const hoy = new Date();
   const ayer = new Date(); ayer.setDate(hoy.getDate() - 1);
   const pad = n => String(n).padStart(2,'0');
   
-  const formatDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  const formatTime = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-
-  // CONFIGURACIÓN EXACTA: Un día antes a las 9:00 AM hasta Hoy a la Hora Actual
-  document.getElementById('date-from').value = formatDate(ayer);
+  document.getElementById('date-from').value = `${ayer.getFullYear()}-${pad(ayer.getMonth()+1)}-${pad(ayer.getDate())}`;
   document.getElementById('time-from').value = '09:00';
-  
-  document.getElementById('date-to').value = formatDate(hoy);
-  document.getElementById('time-to').value = formatTime(hoy);
+  document.getElementById('date-to').value = `${hoy.getFullYear()}-${pad(hoy.getMonth()+1)}-${pad(hoy.getDate())}`;
+  document.getElementById('time-to').value = `${pad(hoy.getHours())}:${pad(hoy.getMinutes())}`;
   
   if(turnoGroups.length === 0) buildTurnoGroups();
   buildTurnosGridSkeleton();
@@ -570,17 +567,27 @@ function buildTurnosGridSkeleton(){
 
 ['date-from','date-to','time-from','time-to'].forEach(id => document.getElementById(id).onchange = computeAndRender);
 document.getElementById('btn-today').onclick = initDashboardView;
-document.getElementById('btn-all-range').onclick = () => {
-  if(!orders.length) return;
-  const sortedDates = [...orders].map(o=>o.fecha).sort();
-  document.getElementById('date-from').value = sortedDates[0];
-  document.getElementById('date-to').value = sortedDates[sortedDates.length-1];
-  document.getElementById('time-from').value = '00:00';
-  document.getElementById('time-to').value = '23:59';
-  computeAndRender();
-};
 document.getElementById('search-missing').oninput = computeAndRender;
 document.getElementById('search-orders').oninput = computeAndRender;
+
+// COMPORTAMIENTO VENTANA GRANDE PARA WHATSAPP
+document.getElementById('btn-view-fullscreen').onclick = () => {
+  const container = document.getElementById('grid-screenshot-content');
+  if(!currentMissingGlobal.length) {
+    container.innerHTML = `<div style="font-size:24px; color:var(--ok); padding:40px; text-align:center; width:100%;">✓ ¡Increíble! Todo el personal ha solicitado su almuerzo.</div>`;
+  } else {
+    container.innerHTML = currentMissingGlobal.map(s => `
+      <div class="item-screenshot">
+        <span style="color:var(--danger); font-weight:bold;">•</span>
+        <div style="overflow:hidden; text-overflow:ellipsis;">
+          <b style="font-size:15px; color:var(--text);">${s.nombre}</b><br>
+          <small style="color:var(--text-soft); font-size:11px;">${s.turno} | ${s.area}</small>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('screenshot-modal').classList.remove('hide');
+};
 
 function computeAndRender(){
   const fromDate = document.getElementById('date-from').value;
@@ -600,32 +607,24 @@ function computeAndRender(){
     const currentStamp = `${o.fecha}T${o.hora}`;
     if (currentStamp >= startStamp && currentStamp <= endStamp) {
       totalRawProcessed++;
-      if (!validOrdersMap.has(o.dni)) {
+      if (!validOrdersMap.has(o.dni) || currentStamp > `${validOrdersMap.get(o.dni).fecha}T${validOrdersMap.get(o.dni).hora}`) {
         validOrdersMap.set(o.dni, o);
-      } else {
-        const existing = validOrdersMap.get(o.dni);
-        if (currentStamp > `${existing.fecha}T${existing.hora}`) {
-          validOrdersMap.set(o.dni, o);
-        }
       }
     }
   });
-
-  const staffMap = new Map();
-  staff.forEach(s => staffMap.set(s.dni, s));
 
   let totalOrdered = 0;
   const groupTotals = {};
   turnoGroups.forEach(g => { groupTotals[g.sig] = { expected: 0, ordered: 0 }; });
 
   const areaTotals = {};
+  const menuCounts = {};
   const missingList = [];
   const validOrdersList = [];
 
   staff.forEach(s => {
     const sig = shiftSignature(s.turno);
     if(groupTotals[sig]) groupTotals[sig].expected++;
-
     if(!areaTotals[s.area]) areaTotals[s.area] = { expected: 0, ordered: 0 };
     areaTotals[s.area].expected++;
 
@@ -636,24 +635,27 @@ function computeAndRender(){
       
       const orderData = validOrdersMap.get(s.dni);
       validOrdersList.push({
-        fecha: orderData.fecha,
-        hora: orderData.hora,
-        turnoForm: orderData.turno,
-        dni: s.dni,
-        nombre: s.nombre,
-        menu: orderData.menu
+        fecha: orderData.fecha, hora: orderData.hora, turnoForm: orderData.turno,
+        dni: s.dni, nombre: s.nombre, menu: orderData.menu, turnoOriginal: s.turno
       });
+
+      menuCounts[orderData.menu] = (menuCounts[orderData.menu] || 0) + 1;
     } else {
       missingList.push(s);
     }
   });
 
+  currentMissingGlobal = missingList; 
+  currentValidOrdersGlobal = validOrdersList;
+
+  // Renderizar KPIs Principales
   document.getElementById('kpi-total').textContent = staff.length;
   document.getElementById('kpi-ordered').textContent = totalOrdered;
   document.getElementById('kpi-missing').textContent = staff.length - totalOrdered;
   document.getElementById('kpi-trans').textContent = totalRawProcessed;
-  document.getElementById('kpi-ordered-pct').textContent = staff.length ? Math.round(totalOrdered / staff.length * 100) + '% de asistencia' : '0%';
+  document.getElementById('kpi-ordered-pct').textContent = staff.length ? Math.round(totalOrdered / staff.length * 100) + '% del padrón' : '0%';
 
+  // Renderizar Tarjetas de Turnos
   turnoGroups.forEach(g => {
     const t = groupTotals[g.sig];
     const pct = t.expected ? Math.round(t.ordered / t.expected * 100) : 0;
@@ -663,18 +665,35 @@ function computeAndRender(){
     document.getElementById('miss-'+g.sig).textContent = t.expected - t.ordered;
   });
 
-  const areaRows = Object.entries(areaTotals).map(([area,t]) => ({area, pct: t.expected ? Math.round(t.ordered / t.expected * 100) : 0})).sort((a,b)=>a.pct - b.pct);
-  document.getElementById('area-breakdown').innerHTML = areaRows.length ? areaRows.map(r => `
+  // Cumplimiento por Áreas
+  const areaRows = Object.entries(areaTotals).map(([area,t]) => ({area, pct: t.expected ? Math.round(t.ordered / t.expected * 100) : 0})).sort((a,b)=>b.pct - a.pct);
+  document.getElementById('area-breakdown').innerHTML = areaRows.map(r => `
     <div class="area-row">
       <div class="aname">${r.area}</div>
-      <div class="abar"><div style="width:${r.pct}%;background:${r.pct >= 90 ? 'var(--ok)' : r.pct >= 65 ? 'var(--accent)' : 'var(--danger)'};"></div></div>
+      <div class="abar"><div style="width:${r.pct}%;background:var(--ok);"></div></div>
       <div class="apct">${r.pct}%</div>
     </div>
-  `).join('') : '<div class="empty">No hay datos.</div>';
+  `).join('');
 
+  // NUEVO MODULO: Distribución Porcentual Dinámica de Menús
+  const menuEntries = Object.entries(menuCounts).sort((a,b) => b[1] - a[1]);
+  document.getElementById('menu-breakdown').innerHTML = menuEntries.length ? menuEntries.map(([menuName, count]) => {
+    const menuPct = totalOrdered ? Math.round((count / totalOrdered) * 100) : 0;
+    return `
+      <div style="margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; font-weight:500; margin-bottom:4px;">
+          <span>🍽️ ${menuName}</span>
+          <span style="color:var(--b); font-family:'IBM Plex Mono';">${count} und. (${menuPct}%)</span>
+        </div>
+        <div style="height:6px; background:var(--border); border-radius:4px; overflow:hidden;">
+          <div style="width:${menuPct}%; height:100%; background:var(--b); border-radius:4px;"></div>
+        </div>
+      </div>`;
+  }).join('') : `<div class="empty">No hay pedidos registrados en este rango.</div>`;
+
+  // Listado en Tabla de Faltantes
   const qMissing = document.getElementById('search-missing').value.trim().toLowerCase();
   const filteredMissing = missingList.filter(s => !qMissing || s.nombre.toLowerCase().includes(qMissing) || s.dni.includes(qMissing) || s.area.toLowerCase().includes(qMissing));
-  
   document.getElementById('tbody-missing').innerHTML = filteredMissing.length ? filteredMissing.map(s => `
     <tr>
       <td>${turnoBadge(s.turno)}</td>
@@ -683,12 +702,11 @@ function computeAndRender(){
       <td>${s.area}</td>
       <td><span class="badge" style="color:var(--danger); background:var(--danger-bg);">Falta Marcar</span></td>
     </tr>
-  `).join('') : `<tr><td colspan="5" class="empty">✓ ¡Excelente! Todo el personal cuenta con almuerzo reservado en este rango.</td></tr>`;
+  `).join('') : `<tr><td colspan="5" class="empty">✓ ¡Excelente! Todo el personal cuenta con almuerzo.</td></tr>`;
 
+  // Listado en Tabla de Registrados Vigentes
   const qOrders = document.getElementById('search-orders').value.trim().toLowerCase();
-  const filteredOrders = validOrdersList.filter(o => !qOrders || o.nombre.toLowerCase().includes(qOrders) || o.dni.includes(qOrders) || o.menu.toLowerCase().includes(qOrders))
-    .sort((a,b) => `${b.fecha}T${b.hora}`.localeCompare(`${a.fecha}T${a.hora}`));
-
+  const filteredOrders = validOrdersList.filter(o => !qOrders || o.nombre.toLowerCase().includes(qOrders) || o.dni.includes(qOrders) || o.menu.toLowerCase().includes(qOrders));
   document.getElementById('tbody-orders').innerHTML = filteredOrders.length ? filteredOrders.map(o => {
     const [y,m,d] = o.fecha.split('-');
     return `<tr>
@@ -699,31 +717,83 @@ function computeAndRender(){
       <td>${o.nombre}</td>
       <td style="font-weight:500;">🍽️ ${o.menu}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="6" class="empty">No se registran transacciones confirmadas en el rango de tiempo seleccionado.</td></tr>`;
-
-  lastOrdersExport = filteredOrders.map(o => ({
-    'Fecha Marcación': o.fecha, 'Hora Exacta': o.hora, 'Turno Formulario': o.turnoForm, 'DNI Operario': o.dni, 'Nombre Empleado': o.nombre, 'Menú Seleccionado': o.menu
-  }));
+  }).join('') : `<tr><td colspan="6" class="empty">No se registran transacciones.</td></tr>`;
 }
 
+// EXPORTACIÓN A EXCEL CON DISEÑO EJECUTIVO PARA FIRMAS (5 COLUMNAS)
 document.getElementById('btn-export-orders').onclick = () => {
-  if(!lastOrdersExport.length) { alert('No hay registros coincidentes para exportar.'); return; }
-  const ws = XLSX.utils.json_to_sheet(lastOrdersExport);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Pedidos Consolidados");
-  XLSX.writeFile(wb, `Reporte_Almuerzos_CDI.xlsx`);
+  if(!currentValidOrdersGlobal.length) { alert('No hay registros para exportar.'); return; }
+  
+  // Mapeo estructurado para planilla física de control
+  const rowsFormat = currentValidOrdersGlobal.map((o, idx) => [
+    idx + 1,
+    o.nombre,
+    o.dni,
+    o.turnoOriginal.toUpperCase(),
+    "" // Cuadro en blanco para Firma física
+  ]);
+
+  const headers = [["#", "NOMBRES Y APELLIDOS", "DNI", "TURNO", "FIRMA DEL TRABAJADOR"]];
+  const ws = XLSX.utils.aoa_to_sheet(headers.concat(rowsFormat));
+  
+  // Propiedades de ancho de columnas óptimas
+  ws['!cols'] = [
+    { wch: 6 },   // #
+    { wch: 40 },  // Nombres
+    { wch: 14 },  // DNI
+    { wch: 15 },  // Turno
+    { wch: 25 }   // Recuadro Firma
+  ];
+
+  const wb = XLSX.utils.book_new(); 
+  XLSX.utils.book_append_sheet(wb, ws, "Padrón Almuerzos");
+  XLSX.writeFile(wb, `Planilla_Firmas_Almuerzos.xlsx`);
 };
 
-document.getElementById('btn-tpl-1-download').onclick = (e) => {
-  e.stopPropagation();
-  const ws = XLSX.utils.aoa_to_sheet([['Nombre', 'DNI', 'Turno', 'Área'], ['Juan Pérez Gómez', '45678912', 'Mañana', 'Picking']]);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Personal');
-  XLSX.writeFile(wb, 'Plantilla_Personal_CDI.xlsx');
-};
-document.getElementById('btn-tpl-2-download').onclick = (e) => {
-  e.stopPropagation();
-  const ws = XLSX.utils.aoa_to_sheet([['Fecha', 'Turno', 'Nombre completo', 'DNI', 'Menu Opcional'], ['25/06/2026 09:14:22', 'Mañana', 'Juan Pérez', '45678912', 'Menú 1: Pollo a la brasa']]);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
-  XLSX.writeFile(wb, 'Plantilla_Pedidos_Formulario.xlsx');
+// EXPORTACIÓN A DOCUMENTO WORD (NATIVO E IMPRIMIBLE)
+document.getElementById('btn-export-word').onclick = () => {
+  if(!currentValidOrdersGlobal.length) { alert('No hay datos para exportar.'); return; }
+  
+  let tableHtml = `
+    <table border="1" cellspacing="0" cellpadding="6" style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif; font-size:11px;">
+      <tr style="background-color:#1B2330; color:white; font-weight:bold; text-align:center;">
+        <th style="width:5%;">#</th>
+        <th style="width:45%;">NOMBRES Y APELLIDOS</th>
+        <th style="width:15%;">DNI</th>
+        <th style="width:15%;">TURNO</th>
+        <th style="width:20%;">FIRMA</th>
+      </tr>`;
+      
+  currentValidOrdersGlobal.forEach((o, index) => {
+    tableHtml += `
+      <tr style="height:32px;">
+        <td style="text-align:center;">${index + 1}</td>
+        <td>${o.nombre}</td>
+        <td style="text-align:center;">${o.dni}</td>
+        <td style="text-align:center;">${o.turnoOriginal.toUpperCase()}</td>
+        <td></td>
+      </tr>`;
+  });
+  tableHtml += `</table>`;
+
+  const documentContent = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><title>Formato de Control de Almuerzos</title><meta charset="utf-8"></head>
+    <body style="font-family:Arial; padding:20px;">
+      <div style="text-align:center; margin-bottom:20px;">
+        <h2 style="margin:0; font-size:18px;">CONTROL DE ENTREGA DE ALMUERZOS</h2>
+        <p style="margin:5px 0 0; font-size:12px; color:#555;">CDI Huaycoloro — Reporte de Firmas</p>
+      </div>
+      ${tableHtml}
+    </body>
+    </html>`;
+
+  const blob = new Blob(['\ufeff' + documentContent], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Formato_Impresion_Firmas.doc`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 };
 
 function tick(){
